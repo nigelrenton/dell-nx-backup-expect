@@ -1,0 +1,23 @@
+#!/usr/bin/expect
+
+set timeout 300
+set nodes [list switch1 switch2 etc...]
+set scphost "scp-host"
+set scppath "-path-to-scp-folder-no-leading-slash"
+set scpuser "scp-user"
+set scppass "scp-path"
+set now [clock seconds]
+set timestr [clock format $now -format %y%m%d%H%M%S]
+
+foreach node $nodes {
+
+    set filename [string map {. \_} $node-$timestr\.cfg]
+    spawn ssh $node
+    expect ">"  { send "enable\r" }
+    expect "#" { send "copy running-config scp://$scpuser@$scphost/$scppath/$filename\r" }
+    expect "Remote Password:" { send $scppass\r }
+    expect "(y/n)" { send "y" }
+    expect "#" { send "exit\r" }
+    expect ">" { send "logout\r" }
+
+}
